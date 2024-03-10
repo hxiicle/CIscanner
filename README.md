@@ -13,9 +13,9 @@
 * 会修改并发送URL参数和请求体参数内的所有参数，请求体目前只支持`application/x-www-form-urlencoded`的数据类型
 * 工具有两个版本，whitelist版本以及target版本
 	* targetlist版本，仅扫描写入targetlist内的目标（建议使用这个版本，因为获取dnslog需要不断访问dnslog网站，如果网站被访问次数过多，会无法及时响应）
-![targetlist](./images/targetlist.jpg)
+<br />![targetlist](./images/targetlist.jpg)
 	* whitelist版本，过滤白名单内的目标
-![whitelist](./images/whitelist.jpg)
+<br />![whitelist](./images/whitelist.jpg)
 * 重中之重！工具外观及部分代码借鉴了[f0ng老师的log4j2burpscanner](https://github.com/f0ng/log4j2burpscanner)以及[P喵呜老师的BurpShiroPassiveScan](https://github.com/pmiaowu/BurpShiroPassiveScan)，感谢！
 
 ### 功能
