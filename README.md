@@ -1,5 +1,6 @@
-工具目前还是处于需要更新的状态，不过基础功能已经完备，就是扫描可能会有点慢（90度鞠躬道歉
-目前会暂停更新，不过我会回来的！（敝帚自珍，一只菜猫的自知
+~~工具目前还是处于需要更新的状态，不过基础功能已经完备，就是扫描可能会有点慢（90度鞠躬道歉~~
+~~目前会暂停更新，不过我会回来的！（敝帚自珍，一只菜猫的自知~~
+菜猫我回来了！省流版：代码优化，加了线程且线程可控
 
 ### 免责声明
 该工具仅用于安全自查检测
@@ -9,25 +10,28 @@
 ### 简介
 * 工具利用`Java11`编写，其他版本暂未测试支不支持
 * 使用需要开启BurpSuite的被动扫描
+* 工具有两个版本，whitelist版本以及target版本
+	* targetlist版本，仅扫描写入targetlist内的目标（建议使用这个版本，因为获取dnslog需要不断访问dnslog网站，如果网站被访问次数过多，会无法及时响应
+![targetlist](./images/targetlist.jpg)
+	* whitelist版本，过滤白名单内的目标
+![whitelist](./images/whitelist.jpg)
+* 会修改并发送URL参数和请求体参数内的所有参数，请求体目前只支持`application/x-www-form-urlencoded`的数据类型
 * 重中之重！工具外观及部分代码借鉴了[f0ng老师的log4j2burpscanner](https://github.com/f0ng/log4j2burpscanner)以及[P喵呜老师的BurpShiroPassiveScan](https://github.com/pmiaowu/BurpShiroPassiveScan)，感谢！
 
 ### 功能
-会修改并发送URL参数和请求体参数内的所有参数，请求体目前只支持`application/x-www-form-urlencoded`的数据类型，目前只支持单线程，所以扫描比较慢，后续一定会改进（今日画大饼完成！
+会修改并发送URL参数和请求体参数内的所有参数，请求体目前只支持`application/x-www-form-urlencoded`的数据类型，~~目前只支持单线程，所以扫描比较慢，后续一定会改进（今日画大饼完成！~~支持多线程，且线程可控
 
 ### 使用截图
-每次打开Burp需要选中Open，插件才会启动
+每次打开Burp需要选中Start，插件才会启动，线程默认是4，且仅支持填入1-10内的整数
 ![设置页面](./images/1.jpg)
-工具会在Burp目录下生成两个文件`CIScanner.properties`和`CIScanner_SubDomain.txt`
-`CIScanner.properties`：用于记录配置信息
-`CIScanner_SubDomain.txt`：用于存储未在DnsLog检测到的域名，用于查漏补缺，满9条就会删除前5条（这也是扫描慢的主要原因）
-![CIScanner_SubDomain.txt](./images/3.jpg)
+工具会在Burp目录下生成文件`CIScanner.properties`，用于记录配置信息
+![CIScanner.properties](./images/2.jpg)
 工具会记录下每次改动的数据包，有漏洞的会标记`Danger`，
-**ps：有一个Bug，只有拖动表格（下图红色指向的位置），表格里的数据才会在页面显示，菜猫我啊真的有点搞不来，如果有大神看到，求指点，提前感谢！**
-![使用截图](./images/2.jpg)
+![使用截图](./images/3.jpg)
 发现了漏洞也会在`Extensions`显示
 ![发现漏洞](./images/4.jpg)
+Payload格式: aaa{DNSSERVER}，如果没有{DNSSERVER}，则默认直接追加至Payload后
+![Payload格式](./images/5.jpg)
 
 ### 后续功能
-* 多线程
-* 表格数据的显示问题
-* 黑名单功能
+* Accept 白名单增加

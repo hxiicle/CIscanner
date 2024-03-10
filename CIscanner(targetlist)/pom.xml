@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>CIscanner</artifactId>
+    <version>2.0.0</version>
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/net.portswigger.burp.extender/burp-extender-api -->
+        <dependency>
+            <groupId>net.portswigger.burp.extender</groupId>
+            <artifactId>burp-extender-api</artifactId>
+            <version>2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- 用于编译Java源代码 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- 用于创建可执行的JAR包，并将项目的依赖项打包到JAR中 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <!-- 自定义jar包名称 -->
+                    <finalName>CIscanner-2.0.0</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <!-- 指定JAR包的配置信息 -->
+                    <archive>
+                        <!-- 指定JAR包的清单文件 -->
+                        <manifest>
+                            <!-- 指定JAR包的主类 -->
+                            <mainClass>burp.BurpExtender</mainClass>
+                        </manifest>
+                    </archive>
+                    <!-- 指定要使用的装配描述符的引用，这里使用了jar-with-dependencies，表示将所有依赖项打包到JAR中 -->
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <!-- 指定输出目录，这里设置为${project.build.directory}/CIscanner，表示将生成的JAR包输出到项目构建目录下的"CIscanner"文件夹中 -->
+                    <outputDirectory>
+                        ${project.build.directory}/CIscanner
+                    </outputDirectory>
+                </configuration>
+                <!-- 添加此项后，可直接使用mvn package | mvn install -->
+                <!-- 不添加此项，需直接使用mvn package assembly:single -->
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
