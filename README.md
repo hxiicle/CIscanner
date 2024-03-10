@@ -28,7 +28,7 @@
 <br />![设置页面](./images/1.jpg)
 <br />工具会在Burp目录下生成文件`CIScanner.properties`，用于记录配置信息
 <br />![CIScanner.properties](./images/2.jpg)
-<br />工具会记录下每次改动的数据包，有漏洞的会标记`Danger`，
+<br />工具会记录下每次改动的数据包，有漏洞的会标记`Danger`
 <br />![使用截图](./images/3.jpg)
 <br />发现了漏洞也会在`Extensions`显示
 <br />![发现漏洞](./images/4.jpg)
