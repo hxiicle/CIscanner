@@ -11,7 +11,7 @@ import burp.Application.GetDnsLogThread;
 
 public class BurpExtender implements IBurpExtender, IScannerCheck, IExtensionStateListener {
     public static String NAME = "CIscanner";
-    public static String VERSION = "2.0.0";
+    public static String VERSION = "2.1.0";
     private IExtensionHelpers helpers;
     private IBurpExtenderCallbacks callbacks;
 
@@ -82,8 +82,14 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, IExtensionSta
             }
         }
 
+
         String method = baseBurpUrl.getRequestMethod();
         List<String> header = baseBurpUrl.getRequestHeader();
+
+        // Accept黑名单
+        if(this.isAcceptBlackList(header)) {
+            return null;
+        }
         // 获取参数
         String params = this.getParamString(method, header, baseBurpUrl);
         //this.stdout.println("params:" + params);
@@ -165,15 +171,23 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, IExtensionSta
                         String issue = "Danger";
                         //this.stdout.println("id:" + isFindString);
                         this.citab.update(Integer.parseInt(isFindString.replaceAll("Find", "")), issue);
-                    } else {
+                    } else if (isFindString.contains("No")) {
                         String issue = "";
                         //this.stdout.println("id:" + isFindString);
                         this.citab.update(Integer.parseInt(isFindString.replaceAll("No", "")), issue);
+                    } else if (isFindString.contains("TimeOut")) {
+                        String issue = "Delay time > 8s";
+                        this.citab.update(Integer.parseInt(isFindString.replaceAll("TimeOut", "")), issue);
+                    } else if (isFindString.contains("Error")) {
+                        String issue = "Error, check Extensions/Error";
+                        this.citab.update(Integer.parseInt(isFindString.replaceAll("Error", "")), issue);
                     }
                 }
             } catch (Exception e) {
-                this.stderr.println(e);
-                this.stdout.println("*** 大概率是你的API响应不过来了 ***");
+                this.stdout.println("\n================================================");
+                this.stdout.println("出现未知问题：");
+                this.stdout.println(e);
+                this.stdout.println("================================================");
             }
         }
 
@@ -264,6 +278,25 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, IExtensionSta
                 if (ii == splitDomainName.size()) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 判断Accept是否在黑名单内
+     * 大小写不区分
+     * 是 = true, 否 = false
+     *
+     * @param header
+     * @return
+     */
+    private boolean isAcceptBlackList(List<String> header) {
+        String headerString = String.join("!", header);
+        List<String> acceptList = Arrays.asList( "Accept: image/avif,image/webp,*/*");
+        for (String s : acceptList) {
+            if (headerString.toLowerCase().contains(s.toLowerCase())) {
+                return true;
             }
         }
         return false;

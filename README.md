@@ -1,5 +1,17 @@
 ## CIscanner 
-### 工具主要用来扫描命令注入漏洞，会将参数修改为payload，目前仅支持修改url参数以及form表单的参数，payload由ping+dnsserver组成**
+### 工具主要用来扫描命令注入漏洞，会将参数修改为payload，目前仅支持修改url参数以及form表单的参数，payload由ping+dnsserver组成
+
+### 2024.3.13 更新
+* 优化Test Dns Server按钮处代码，当连接时间和读取时间超过5s时，弹出提示
+<br />![](./images/8.jpg)
+* 访问DnsLog出现Error或连接时间和读取时间超过8s时，会在表格内体现，并会输出报错在Extensions/Error
+<br />![](./images/6.jpg)
+<br />![](./images/7.jpg)
+* 增加Accept黑名单，会过滤含有`Accept: image/avif,image/webp,*/*`的请求包
+* 增加Payload提示
+<br />![](./images/9.jpg)
+
+----
 
 ~~工具目前还是处于需要更新的状态，不过基础功能已经完备，就是扫描可能会有点慢（90度鞠躬道歉~~
 <br />~~目前会暂停更新，不过我会回来的！（敝帚自珍，一只菜猫的自知~~
@@ -15,7 +27,7 @@
 * 使用需要开启BurpSuite的被动扫描
 * 会修改并发送URL参数和请求体参数内的所有参数，请求体目前只支持`application/x-www-form-urlencoded`的数据类型
 * 工具有两个版本，whitelist版本以及target版本
-	* targetlist版本，仅扫描写入targetlist内的目标（建议使用这个版本，因为获取dnslog需要不断访问dnslog网站，如果网站被访问次数过多，会无法及时响应）
+	* targetlist版本，仅扫描写入targetlist内的目标
 <br />![targetlist](./images/targetlist.jpg)
 	* whitelist版本，过滤白名单内的目标
 <br />![whitelist](./images/whitelist.jpg)
@@ -39,5 +51,4 @@
 <br />![Payload格式](./images/5.jpg)
 
 ### 后续功能
-* Accept 白名单增加
 * 测试目标不出网的情况（考虑中

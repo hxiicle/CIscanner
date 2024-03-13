@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import java.io.FileOutputStream;
@@ -52,21 +53,27 @@ public class GetDnsLog implements Callable<String> {
                 int isFindInt = 0;
                 String httpResponseBody = null;
                 httpResponseBody = sendGetRequest(this.tokenUrl);
-                saveResponseBodyToFile("ciTagId: " + ciTagId + "\n");
-                saveResponseBodyToFile(ciTagId + " [call - httpResponseBody] : " + httpResponseBody + "\n");
-                for (String subDnsServer : this.subDnsServerList) {
-                    //saveResponseBodyToFile(ciTagId +"[subDnsServer] : " + subDnsServer + "\n");
-                    if (httpResponseBody.toLowerCase().contains(subDnsServer.toLowerCase())) {
-                        //saveResponseBodyToFile(ciTagId + "[Find] : " + httpResponseBody + "\n"); // 追加保存responseBody至文件
-                        isFindInt = isFindInt + 1;
+                if (!httpResponseBody.equals("Fail") && !httpResponseBody.equals("Error")) {
+                    //saveResponseBodyToFile("ciTagId: " + ciTagId + "\n");
+                    //saveResponseBodyToFile(ciTagId + " [call - httpResponseBody] : " + httpResponseBody + "\n");
+                    for (String subDnsServer : this.subDnsServerList) {
+                        //saveResponseBodyToFile(ciTagId +"[subDnsServer] : " + subDnsServer + "\n");
+                        if (httpResponseBody.toLowerCase().contains(subDnsServer.toLowerCase())) {
+                            //saveResponseBodyToFile(ciTagId + "[Find] : " + httpResponseBody + "\n"); // 追加保存responseBody至文件
+                            isFindInt = isFindInt + 1;
+                        }
                     }
-                }
-                if (isFindInt > 0) {
-                    //this.stderr.println(ciTagId + "：" + ciTagId);
-                    return "Find" + ciTagId;
-                } else {
-                    //this.stderr.println(ciTagId + "：" + ciTagId);
-                    return "No" + ciTagId;
+                    if (isFindInt > 0) {
+                        //this.stderr.println(ciTagId + "：" + ciTagId);
+                        return "Find" + ciTagId;
+                    } else {
+                        //this.stderr.println(ciTagId + "：" + ciTagId);
+                        return "No" + ciTagId;
+                    }
+                } else if (httpResponseBody.equals("Fail")) {
+                    return "TimeOut" + ciTagId;
+                } else if (httpResponseBody.equals("Error")) {
+                    return "Error" + ciTagId;
                 }
             }
             pool.shutdownNow();
@@ -108,6 +115,8 @@ public class GetDnsLog implements Callable<String> {
             throw new RuntimeException(e);
         }
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+
         try {
             Random random = new Random();
 
@@ -119,6 +128,8 @@ public class GetDnsLog implements Callable<String> {
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
+            connection.setConnectTimeout(8000); // 设置连接超时时间为8秒
+            connection.setReadTimeout(8000); // 设置读取超时时间为8秒
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -130,11 +141,13 @@ public class GetDnsLog implements Callable<String> {
                 String response = getResponseBody(connection);
                 return response;
             }
-        } catch (Exception e) {
+        } catch (SocketTimeoutException e) {
+            // 处理读取超时异常
+            return "TimeOut";
+        } catch (IOException | InterruptedException e) {
             this.stderr.println(e);
+            return "Error";
         }
-        this.stderr.println("11111111111111111111111111");
-        return null;
     }
 
     public String getResponseBody(HttpURLConnection connection) throws IOException  {
@@ -179,6 +192,7 @@ public class GetDnsLog implements Callable<String> {
         return response.toString();
     }
 
+    /* 检查用的
     private void saveResponseBodyToFile(String responseBody) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream("response.txt", true); // 追加写入文件
@@ -189,5 +203,7 @@ public class GetDnsLog implements Callable<String> {
             throw new RuntimeException(e);
         }
     }
+
+     */
 
 }

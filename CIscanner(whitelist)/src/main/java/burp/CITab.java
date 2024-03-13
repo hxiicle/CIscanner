@@ -2,6 +2,8 @@ package burp;
 
 import java.awt.*;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -243,6 +245,11 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
         JLabel payloadLabel = new JLabel("Payload :");
         // 创建文本输入框
         payloadArea = new JTextArea(5, 5);
+        payloadArea.setToolTipText(
+                "1. Payload格式: aaa{DNSSERVER}\n" +
+                "2. 如果没有{DNSSERVER}，则默认直接追加至Payload后\n" +
+                "3. 多个Payload中间加回车！"
+        );
         payloadArea.setLineWrap(true);
         // 添加滚动条
         JScrollPane payloadScrollPane = new JScrollPane(payloadArea);
@@ -930,10 +937,10 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
 
     // Loading Default Payload
     public void loadingDefaultPayload(){
-        String defaultPayloads = "ping%203|ping%20-c%202%20{DNSSERVER}\n" +
-                "ping%203|ping%20-n%202%20{DNSSERVER}\n" +
-                "dedsadsadsd|ping%20-c%202%20{DNSSERVER}\n" +
-                "dedsadsadsd|ping%20-n%202%20{DNSSERVER}\n";
+        String defaultPayloads = "ping%203|ping%20-c%202%20\n" +
+                "ping%203|ping%20-n%202%20\n" +
+                "dedsadsadsd|ping%20-c%202%20\n" +
+                "dedsadsadsd|ping%20-n%202%20\n";
         String threadNum = "4";
         this.setThreadNum(threadNum);
         this.setPayloadArea(defaultPayloads);
@@ -959,35 +966,16 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
                     dnsServer = ceyeDnsServer;
                     String ceyeAPI = "http://api.ceye.io/v1/records?token=" + ceyeToken + "&type=dns&filter=";
                     // 获取添加随机值的 DnsSever
-                    String testSubDnsServer = this.sendGetRequest(dnsServer);
-                    //this.stdout.println("testSubDnsServe2：" + testSubDnsServer + "\n");
+                    String testSubDnsServer = this.sendPing(dnsServer);
                     // 访问 API，检测是否 ping 成功以及获取访问的延迟时间
                     String testContent = this.sendGetRequestAndDelay(ceyeAPI, testSubDnsServer);
                     //this.stdout.println("testContent：" + testContent + "\n");
-                    if (testContent.contains("Success")) {
-                        String delay = testContent.replaceAll("Success!!!", "");
-                        String point = "Success!\nDelay time is " + delay + "\nIf the delay exceeds 1200ms, please check DnsServer";
-                        JOptionPane.showMessageDialog(null, point , "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
-                    } else if (testContent.contains("Fail")) {
-                        String delay = testContent.replaceAll("Fail!!!", "");
-                        String point = "Fail!\nNo DnsLog was found. Please try again!\nOr you can check the Dns Server and Token, or change to another Dns Server"
-                                + "\nDelay time is " + delay;
-                        JOptionPane.showMessageDialog(null, point , "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
-                    }
+                    JOptionPane.showMessageDialog(null, testContent , "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     dnsServer = otherDnsServer;
-                    String testSubDnsServer = this.sendGetRequest(dnsServer);
+                    String testSubDnsServer = this.sendPing(dnsServer);
                     String testContent = this.sendGetRequestAndDelay(otherToken, testSubDnsServer);
-                    if (testContent.contains("Success")) {
-                        String delay = testContent.replaceAll("Success!!!", "");
-                        String point = "Success!\nDelay time is " + delay + "\nIf the delay exceeds 1200ms, please check DnsServer";
-                        JOptionPane.showMessageDialog(null, point , "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
-                    } else if (testContent.contains("Fail")) {
-                        String delay = testContent.replaceAll("Fail!!!", "");
-                        String point = "Fail!\nNo DnsLog was found. Please try again!\nOr you can check the Dns Server and Token, or change to another Dns Server"
-                                + "\nDelay time is " + delay;
-                        JOptionPane.showMessageDialog(null, point , "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
-                    }
+                    JOptionPane.showMessageDialog(null, testContent , "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         } catch(Exception e) {
@@ -995,66 +983,24 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
         }
     }
 
-    // 利用三组随机字符串拼接 Dns Server，并访问
-    public String sendGetRequest(String dnsServer) {
+    // 利用三组随机字符串拼接 Dns Server，并ping
+    public String sendPing(String dnsServer) {
         String randomStr1 = RandomStringUtils.randomAlphanumeric(3);
         String randomStr2 = RandomStringUtils.randomAlphanumeric(3);
         String randomStr3 = RandomStringUtils.randomAlphanumeric(3);
         String testSubDnsServer = "I.m.testing." + randomStr1 + "." + randomStr2 + "." + randomStr3 + "." + dnsServer;
-        String indexUrl = "http://" + testSubDnsServer;
-
-        // 取消主机名验证
-        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-
-        // 取消证书验证
-        TrustManager[] trustAllCerts = new TrustManager[] {
-                new X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(
-                            java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                    public void checkServerTrusted(
-                            java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                }
-        };
-
-        SSLContext sc = null;
         try {
-            sc = SSLContext.getInstance("TLS");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            InetAddress inetAddress = InetAddress.getByName(testSubDnsServer);
+            inetAddress.isReachable(10);
+        } catch (Exception e) {
+            //this.stderr.println("ping:" + e);
+            return testSubDnsServer;
         }
-        try {
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-        } catch (KeyManagementException e) {
-            throw new RuntimeException(e);
-        }
-        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-
-        try {
-            URL requestUrl = new URL(indexUrl);
-            HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
-            connection.setRequestMethod("GET");
-            int responseCode = connection.getResponseCode();
-            connection.disconnect();
-        } catch (IOException e) {
-            e.printStackTrace(this.stderr);
-        }
-        //this.stdout.println("testSubDnsServer1：" + testSubDnsServer + "\n");
         return testSubDnsServer;
-
     }
 
     // 获取访问 API 请求延迟并检测是否 ping 成功
     public String sendGetRequestAndDelay(String urlString, String testSubDnsServer) {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         long startTime = System.currentTimeMillis();
         String testResults = "";
 
@@ -1062,6 +1008,8 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000); // 设置连接超时时间为5秒
+            connection.setReadTimeout(5000); // 设置读取超时时间为5秒
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -1083,15 +1031,19 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
                 long delay = endTime - startTime;
 
                 if (containsSubDnsServer) {
-                    testResults = "Success!!!" + delay + "ms";
+                    testResults = "Success!\nDelay time is " + delay + "ms\nIf the delay exceeds 1200ms, please check DnsServer";
                 } else {
-                    testResults = "Fail!!!" + delay + "ms";
+                    testResults = "Fail!\nNo DnsLog was found. Please try again!\nOr you can check the Dns Server and Token, or change to another Dns Server"
+                            + "\nDelay time is " + delay + "ms";
                 }
             } else {
                 throw new IOException("HTTP request failed with response code: " + responseCode);
             }
+        } catch (SocketTimeoutException e) {
+            // 处理读取超时异常
+            testResults = "Fail!\nDelay time > 5s! Please check your Dns Server or try again!";
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Test Dns Server", JOptionPane.INFORMATION_MESSAGE);
+            testResults = e.toString();
         }
         return testResults;
     }
