@@ -1042,6 +1042,38 @@ public class CITab extends AbstractTableModel implements ITab, IMessageEditorCon
 
     // 获取访问 API 请求延迟并检测是否 ping 成功
     public String sendGetRequestAndDelay(String urlString, String testSubDnsServer) {
+        // 取消主机名验证
+        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+
+        // 取消证书验证
+        TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(
+                            java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(
+                            java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                }
+        };
+
+        SSLContext sc = null;
+        try {
+            sc = SSLContext.getInstance("TLS");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            throw new RuntimeException(e);
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+
         long startTime = System.currentTimeMillis();
         String testResults = "";
 

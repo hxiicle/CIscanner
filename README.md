@@ -1,6 +1,11 @@
 ## CIscanner 
 ### 工具主要用来扫描命令注入漏洞，会将参数修改为payload，目前仅支持修改url参数以及form表单的参数，payload由ping+dnsserver组成
 
+### 2024.3.14 更新
+* 解决证书验证问题
+<br />![](./images/10.jpg)
+----
+
 ### 2024.3.13 更新
 * 优化Test Dns Server按钮处代码，当连接时间和读取时间超过5s时，弹出提示
 <br />![](./images/8.jpg)

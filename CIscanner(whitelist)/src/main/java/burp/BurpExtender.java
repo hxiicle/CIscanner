@@ -11,7 +11,7 @@ import burp.Application.GetDnsLogThread;
 
 public class BurpExtender implements IBurpExtender, IScannerCheck, IExtensionStateListener {
     public static String NAME = "CIscanner";
-    public static String VERSION = "2.1.0";
+    public static String VERSION = "2.1.1";
     private IExtensionHelpers helpers;
     private IBurpExtenderCallbacks callbacks;
 
